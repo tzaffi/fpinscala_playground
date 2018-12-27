@@ -215,7 +215,7 @@ class ErrorsTest extends FunSuite with Matchers {
     lefty.map(f) should be (lefty)
   }
 
-  test("map of Something works") {
+  test("map of Right works") {
     def f(x: Int): Int =
       x + 1
 
