@@ -209,7 +209,7 @@ class ErrorsTest extends FunSuite with Matchers {
   /********* EITHER  *********/
   test("map of Left is Left") {
     val lefty = ZLeft("you're off the track man!")
-    def f(x: Integer): Integer =
+    def f(x: Int): Int =
       x + 1
 
     lefty.map(f) should be (lefty)
@@ -222,5 +222,45 @@ class ErrorsTest extends FunSuite with Matchers {
     ZRight(3).map(f) should be (ZRight(4))
   }
 
+  test("flatMap") {
+    def f(x: Int): ZEither[String, Int] =
+      if (x % 2 == 0) ZRight(x + 1)
+      else ZLeft("odds are odd")
+
+    val lefty = ZLeft("you're off the track man!")
+    lefty.flatMap[String,Int](f) should be (lefty)
+
+    ZRight(2).flatMap[String,Int](f) should be (ZRight(3))
+    ZRight(3).flatMap[String,Int](f) should be (ZLeft("odds are odd"))
+  }
+
+  test("orElse of Left is default") {
+    ZLeft("you're off the track man!").orElse(ZRight(42)) should be (ZRight(42))
+    ZLeft("you're off the track man!").orElse(ZLeft("woah")) should be (ZLeft("woah"))
+  }
+
+  test("orElse of Right is Right") {
+    ZRight(13).orElse(ZRight(42)) should be (ZRight(13))
+  }
+
+  test("map2 of Left Left is first Left") {
+    val f = (x: Int, y: Int) => x*y
+    ZLeft("bad!").map2(ZLeft("42"))(f) should be (ZLeft("bad!"))
+  }
+
+  test("map2 of Left Right is first Left") {
+    val f = (x: Int, y: Int) => x*y
+    ZLeft("bad!").map2(ZRight(42))(f) should be (ZLeft("bad!"))
+  }
+
+  test("map2 of Right Left is Left") {
+    val f = (x: Int, y: Int) => x*y
+    ZRight(13).map2(ZLeft("42"))(f) should be (ZLeft("42"))
+  }
+
+  test("map2 of Right Right is Right * Right") {
+    val f = (x: Int, y: Int) => x*y
+    ZRight(13).map2(ZLeft("42"))(f) should be (ZLeft("42"))
+  }
 
 }

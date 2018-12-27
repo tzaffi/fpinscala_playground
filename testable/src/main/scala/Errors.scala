@@ -93,18 +93,39 @@ object ZOption {
 
 
 sealed trait ZEither[+E, +A] {
+  // private def getOrElse[B >: A](default: => B): B = this match {
+  //   case ZLeft(e) => default
+  //   case ZRight(a) => a
+  // }
+  // private def getErrElse[EE >: E](default: => EE): EE = this match {
+  //   case ZLeft(e) => e
+  //   case ZRight(a) => default
+  // }
+
   def map[B](f: A => B): ZEither[E,B] = this match {
     case ZLeft(e) => ZLeft(e)
     case ZRight(a) => ZRight(f(a))
   }
-  
-  def flatMap[EE >: E, B](f: A => ZEither[EE,B]): ZEither[EE,B] = ???
-//    map(f) getOrElse ZNone
 
-  def orElse[EE >: E, B >: A](b: => Either[EE,B]): Either[EE,B] = ???
+  def flatMap[EE >: E, B](f: A => ZEither[EE,B]): ZEither[EE,B] = this match {
+    case ZLeft(e) => ZLeft(e)
+    case ZRight(a) => f(a)
+  } 
 
-  def map2(f: A => Boolean): ZEither[A] = ???
-  
+  private def swap(): ZEither[A,E] = this match {
+    case ZLeft(e) => ZRight(e)
+    case ZRight(a) => ZLeft(a)
+  }
+
+  def orElse[EE >: E, B >: A](eb: => ZEither[EE,B]): ZEither[EE,B] =
+    swap flatMap(x => eb swap) swap
+
+  def map2[EE >: E, B, C](eb: ZEither[EE, B])(f: (A, B) => C): ZEither[EE, C] =
+    for {
+      a <- this
+      b <- eb
+    } yield f(a,b)
+
 }
 case class ZLeft[+E](error: E) extends ZEither[E, Nothing]
 case class ZRight[+A](value: A) extends ZEither[Nothing, A]
