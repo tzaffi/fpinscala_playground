@@ -132,4 +132,17 @@ case class ZRight[+A](value: A) extends ZEither[Nothing, A]
 
 
 object ZEither {
+  def Try[A](x: => A): ZEither[String, A] =
+    try ZRight(x)
+    catch { case e: Exception => ZLeft(e.toString) }
+
+  def traverse[E,A,B](xs: List[A])(f: A=>ZEither[E,B]): ZEither[E,List[B]] =
+    xs.foldLeft[ZEither[E,List[B]]](ZRight(Nil))((elb, a) => elb.map2(f(a))( _ :+ _ ))
+
+  def sequence[E, A](xs: List[ZEither[E,A]]): ZEither[E,List[A]] =
+   traverse(xs)(x=>x)
 }
+
+
+
+

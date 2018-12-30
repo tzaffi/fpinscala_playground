@@ -117,22 +117,6 @@ class ErrorsTest extends FunSuite with Matchers {
     ZOption.map2(ZSome(3), ZSome(4))((x: Int, y: Int) => x*y) should be (ZSome(12))
   }
 
-  test("sequence with 2 None's is None") {
-    ZOption.sequence(List(ZSome(13), ZNone, ZSome(42), ZNone)) should be (ZNone)
-  }
-
-  test("sequence with even a single None is None") {
-    ZOption.sequence(List(ZSome(13), ZSome(-11), ZSome(42), ZNone)) should be (ZNone)
-  }
-
-  test("sequence with all ZSome's should be ZSome") {
-    ZOption.sequence(List(ZSome(13), ZSome(-11), ZSome(42), ZSome(14))) should be (ZSome(List(13, -11, 42, 14)))
-  }
-
-  test("Nil sequence should be ZSome(Nil)") {
-    ZOption.sequence(Nil) should be (ZSome(Nil))
-  }
-
   test("Try when succeeds is Some") {
     ZOption.Try("13".toInt) should be (ZSome(13))
   }
@@ -155,6 +139,22 @@ class ErrorsTest extends FunSuite with Matchers {
 
   test("Nil traverseWithTry should be ZSome(Nil)") {
     ZOption.traverseWithTry(List[String]())(_.toInt) should be (ZSome(Nil))
+  }
+
+  test("sequence with 2 None's is None") {
+    ZOption.sequence(List(ZSome(13), ZNone, ZSome(42), ZNone)) should be (ZNone)
+  }
+
+  test("sequence with even a single None is None") {
+    ZOption.sequence(List(ZSome(13), ZSome(-11), ZSome(42), ZNone)) should be (ZNone)
+  }
+
+  test("sequence with all ZSome's should be ZSome") {
+    ZOption.sequence(List(ZSome(13), ZSome(-11), ZSome(42), ZSome(14))) should be (ZSome(List(13, -11, 42, 14)))
+  }
+
+  test("Nil sequence should be ZSome(Nil)") {
+    ZOption.sequence(Nil) should be (ZSome(Nil))
   }
 
   test("traverse with 2 None's is None") {
@@ -263,4 +263,51 @@ class ErrorsTest extends FunSuite with Matchers {
     ZRight(13).map2(ZLeft("42"))(f) should be (ZLeft("42"))
   }
 
+  test("Either.Try returns a Right when there's no exception"){
+    ZEither.Try("13".toInt) should be (ZRight(13))
+  }
+
+
+  def makeExpectedError(x: String): String = 
+    "java.lang.NumberFormatException: For input string: \"%s\"".format(x)
+
+  test("Either.Try converts an exception to E = String"){
+    ZEither.Try("thirteen".toInt) should be (ZLeft(makeExpectedError("thirteen")))
+  }
+
+  test("Either traverse with 2 None's is None") {
+    val stoi = (x: String) => ZEither.Try(x.toInt)
+    ZEither.traverse(List("13", "no", "42", "no"))(stoi) should be (ZLeft(makeExpectedError("no")))
+  }
+
+  test("Either traverse with a single None's is None") {
+    val stoi = (x: String) => ZEither.Try(x.toInt)
+    ZEither.traverse(List("13", "-93", "42", "-wow"))(stoi) should be (ZLeft(makeExpectedError("-wow")))
+  }
+
+  test("Either traverse with all goods is Some") {
+    val stoi = (x: String) => ZEither.Try(x.toInt)
+    ZEither.traverse(List("13", "1024", "42", "-93"))(stoi) should be (ZRight(List(13, 1024, 42, -93)))
+  }
+
+  test("Nil Either traverse should be ZSome(Nil)") {
+    val stoi = (x: String) => ZEither.Try(x.toInt)
+    ZEither.traverse(List[String]())(stoi) should be (ZRight(Nil))
+  }
+
+  test("Either sequence with 2 None's is None") {
+    ZEither.sequence(List(ZRight(13), ZLeft("non"), ZRight(42), ZLeft("non"))) should be (ZLeft("non"))
+  }
+
+  test("Either sequence with even a single None is None") {
+    ZEither.sequence(List(ZRight(13), ZRight(-11), ZRight(42), ZLeft("non"))) should be (ZLeft("non"))
+  }
+
+  test("Either sequence with all ZRight's should be ZRight") {
+    ZEither.sequence(List(ZRight(13), ZRight(-11), ZRight(42), ZRight(14))) should be (ZRight(List(13, -11, 42, 14)))
+  }
+
+  test("Either Nil sequence should be ZRight(Nil)") {
+    ZEither.sequence(Nil) should be (ZRight(Nil))
+  }
 }
