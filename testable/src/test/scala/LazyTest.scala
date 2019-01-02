@@ -88,23 +88,89 @@ class LazyTest extends FunSuite with Matchers {
   //   to3.headOption should be (Some(1))
   // }
 
-  test("map should take the squares"){
-    buildExample(3).map(x=>x*x).toList should be (ZStream.lazyApply(mkSleepyInt(1), mkSleepyInt(4), mkSleepyInt(9)).toList)
+  // test("map should take the squares"){
+  //   buildExample(3).map(x=>x*x).toList should be (ZStream.lazyApply(mkSleepyInt(1), mkSleepyInt(4), mkSleepyInt(9)).toList)
+  // }
+
+  // test("filter odds out should keep the evens"){
+  //   buildExample(3).filter(_%2==0).toList should be (ZStream.lazyApply(mkSleepyInt(2)).toList)
+  // }
+
+  // test("append does what you think"){
+  //   (buildExample(3).append(buildExample(2))).toList should be (
+  //     ZStream.lazyApply(mkSleepyInt(1), mkSleepyInt(2), mkSleepyInt(3), mkSleepyInt(1), mkSleepyInt(2)).toList
+  //   )
+  // }
+
+  // test("flatMap should expand in a wierd way"){
+  //   (buildExample(3) flatMap(buildExample(_))).toList should be (
+  //     (buildExample(1) append buildExample(2) append buildExample(3)).toList
+  //   )
+  //}
+
+  // test("first three of constant(42) should be 42 42 42"){
+  //   ZStream.constant(42).take(3).toList should be (List(42,42,42))
+  // }
+
+  // test("first three of from(42) should be 42 43 45"){
+  //   ZStream.from(42).take(3).toList should be (List(42,43,44))
+  // }
+
+  // test("first 10 fibs should be 0 1 1 2 3 5 8 13 21 34"){
+  //   ZStream.fibs.take(10).toList should be (List(0,1,1,2,3,5,8,13,21,34))
+  // }
+
+  // test("unfold of ping pong produces 0 1 0 1 0 1 ..."){
+  //   val pingPong = (x: Boolean) => Some((if (x) 1 else 0, !x ))
+  //   ZStream.unfold(false)(pingPong).take(5).toList should be (List(0, 1, 0, 1, 0))
+  // }
+
+  // test("unfold of Zeno's sequence") {
+  //   val zeno = (n: Int) => Some(1.0 - math.pow(0.5,n), n+1)
+  //   ZStream.unfold(0)(zeno).take(4).toList should be (List(0.0, 0.5, 0.75, 0.875))
+  // }
+
+  // test("onesUsingUnfold") {
+  //   ZStream.onesUsingUnfold.take(4).toList should be (List(1,1,1,1))
+  // }
+
+  // test("first three of constantViaunfold(42) should be 42 42 42"){
+  //   ZStream.constantViaUnfold(42).take(3).toList should be (List(42,42,42))
+  // }
+
+  // test("first three of fromViaUnfold(42) should be 42 43 45"){
+  //   ZStream.fromViaUnfold(42).take(3).toList should be (List(42,43,44))
+  // }
+
+  // test("first 10 fibsViaunfold should be 0 1 1 2 3 5 8 13 21 34"){
+  //   ZStream.fibsViaUnfold.take(10).toList should be (List(0,1,1,2,3,5,8,13,21,34))
+  // }
+
+  // test("takeViaUnfold keeps the first n elements of a Stream") {
+  //   buildExample(5).takeViaUnfold(2).toList should be (buildExample(2).toList)
+  // }
+
+  // test("takeWhileViaUnfold keeps until it encounters a number that doesn't divide 12"){
+  //   def divBy12 = ( (x:Int) => (12 % x == 0))
+  //   val to12 = buildExample(12)
+  //   to12.takeWhileViaUnfold(divBy12).toList should be (buildExample(4).toList)
+  // }
+
+  // test("mapViaUnfold should take the squares"){
+  //   buildExample(3).mapViaUnfold(x=>x*x).toList should be (ZStream.lazyApply(mkSleepyInt(1), mkSleepyInt(4), mkSleepyInt(9)).toList)
+  // }
+
+  test("zipWith should do what you think"){
+    ZStream.from(0).zipWith(ZStream.from(0))(_+_).take(5).toList should be (List(0,2,4,6,8))
   }
 
-  test("filter odds out should keep the evens"){
-    buildExample(3).filter(_%2==0).toList should be (ZStream.lazyApply(mkSleepyInt(2)).toList)
-  }
-
-  test("append does what you think"){
-    (buildExample(3).append(buildExample(2))).toList should be (
-      ZStream.lazyApply(mkSleepyInt(1), mkSleepyInt(2), mkSleepyInt(3), mkSleepyInt(1), mkSleepyInt(2)).toList
+  test("zipAll should do what you think"){
+    ZStream.from(0).take(2).zipAll(ZStream.from(0).take(4)).toList should be (
+      List((Some(0),Some(0)),
+        (Some(1),Some(1)),
+        (None,Some(2)),
+        (None,Some(3)))
     )
   }
 
-  test("flatMap should expand in a wierd way"){
-    (buildExample(3) flatMap(buildExample(_))).toList should be (
-      (buildExample(1) append buildExample(2) append buildExample(3)).toList
-    )
-  }
 }
