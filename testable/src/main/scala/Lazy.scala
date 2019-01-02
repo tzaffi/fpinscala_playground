@@ -60,7 +60,16 @@ sealed trait ZStream[+A] {
       else t().drop(n-1)
   }
 
-  def forAll(p: A => Boolean): Boolean = this match {
+  @annotation.tailrec
+  final def exists(p: A => Boolean): Boolean = this match {
+    case ZEmpty => false
+    case ZCons(h,t) =>
+      if (p(h())) true
+      else t().exists(p)
+  }
+
+  @annotation.tailrec
+  final def forAll(p: A => Boolean): Boolean = this match {
     case ZCons(h,t) =>
       if(p(h())) t().forAll(p)
       else false
@@ -120,6 +129,34 @@ sealed trait ZStream[+A] {
       case (ZEmpty, ZCons(hr,tr)) => Some( (None, Some(hr())), (ZEmpty, tr()) )        
       case _ => None
     }
+
+  def startsWith[B>:A](right: ZStream[B]): Boolean =
+    zipAll(right) takeWhile(_._2 != None) forAll (x => x._1 == x._2)
+
+  // BAD RECURSION!!!!
+  // def tails(): ZStream[ZStream[A]] = this match {
+  //   case ZEmpty => cons(empty, empty)
+  //   case ZCons(h,t) => cons(this, empty) append t().tails()
+  // }
+
+  //book's solution:
+  def tails: ZStream[ZStream[A]] =
+    unfold(this) {
+      case ZEmpty => None
+      case s => Some((s, s drop 1))
+    } append ZStream(empty)
+
+
+/*
+  0 1 2 3 4 5 6 ... startsWith ? 4 5 6 -> NO
+    1 2 3 4 5 6 ... startsWith ? 4 5 6 -> NO
+      2 3 4 5 6 ... startsWith ? 4 5 6 -> NO
+        3 4 5 6 ... startsWith ? 4 5 6 -> NO
+          4 5 6 ... startsWith ? 4 5 6 -> !!!!!YES!!!!! 
+*/
+  def hasSubsequence[B>:A](right: ZStream[B]): Boolean = 
+    tails exists(_.startsWith(right))
+
 }
 case object ZEmpty extends ZStream[Nothing]
 case class ZCons[+A](h: () => A, t: () => ZStream[A]) extends ZStream[A]
